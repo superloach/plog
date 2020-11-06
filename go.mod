@@ -1,3 +1,3 @@
-module github.com/superloach/plug
+module github.com/superloach/plog
 
 go 1.15
