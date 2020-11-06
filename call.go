@@ -43,7 +43,8 @@ func (p *Plog) Call(name string, args, rets []interface{}) error {
 	debug("encoded %v", msg)
 
 	msg = <-r.C
-	debug("call got msg %v", msg)
+
+	debug("got msg %v", msg)
 
 	err = json.Unmarshal(msg.Ret, &rets)
 	if err != nil {
@@ -71,38 +72,4 @@ func (p *Plog) takeCall(id int) int {
 
 func (p *Plog) releaseCall(id int) {
 	p.calls[id] = false
-}
-
-func (p *Plog) localCall(msg *Msg) error {
-	debug("call %v", msg)
-
-	p.fnMu.Lock()
-	fn, ok := p.fns[msg.Name]
-	if !ok {
-		p.fnMu.Unlock()
-		return fmt.Errorf("no fn %q", msg.Name)
-	}
-	p.fnMu.Unlock()
-
-	debug("call %q %q", msg.Name, msg.Args)
-
-	retd, err := fn.callJSON(msg.Args)
-	if err != nil {
-		return fmt.Errorf("call json %q: %w", msg.Args, err)
-	}
-
-	debug("%q returned %q", msg.Name, retd)
-
-	msg = &Msg{
-		Name: msg.Name,
-		Call: msg.Call,
-		Ret:  retd,
-	}
-
-	err = p.Send(msg)
-	if err != nil {
-		return fmt.Errorf("send %v: %w", msg, err)
-	}
-
-	return nil
 }
