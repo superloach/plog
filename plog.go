@@ -1,9 +1,6 @@
 package plog
 
 import (
-	"encoding/json"
-	"io"
-	"os"
 	"sync"
 )
 
@@ -49,17 +46,4 @@ func New(mes Messenger) *Plog {
 	}
 
 	return p
-}
-
-// IO creates a new Plog connected to in and out, using an ioMessenger.
-func IO(in io.Reader, out io.Writer) *Plog {
-	return New(ioMessenger{
-		Decoder: json.NewDecoder(in),
-		Encoder: json.NewEncoder(out),
-	})
-}
-
-// StdIO makes a Plog which serves on the stdin/stdout of the binary, and can be run with an Exec.
-func StdIO() *Plog {
-	return IO(os.Stdin, os.Stdout)
 }
