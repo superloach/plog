@@ -1,6 +1,7 @@
 package plog
 
 import (
+	"os"
 	"sync"
 )
 
@@ -46,4 +47,9 @@ func New(mes Messenger) *Plog {
 	}
 
 	return p
+}
+
+// StdIO makes a Plog which serves on the stdin/stdout of the binary, and can be connected to by Exec.
+func StdIO() *Plog {
+	return New(IOMessenger(os.Stdin, os.Stdout))
 }
