@@ -27,5 +27,15 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("%q -> %q\n", theString, upperString)
+	fmt.Printf("(wrap) %q -> %q\n", theString, upperString)
+
+	err = p.Call("upper",
+		[]interface{}{},
+		[]interface{}{&upperString},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("(call) %q -> %q\n", theString, upperString)
 }
