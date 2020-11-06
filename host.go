@@ -1,4 +1,4 @@
-package plug
+package plog
 
 import (
 	"encoding/json"
@@ -7,8 +7,8 @@ import (
 	"os/exec"
 )
 
-// Host makes a Plug which runs and connects to the stdin/stdout of a binary which serves a Guest.
-func Host(exe string, args ...string) *Plug {
+// Host makes a Plog which runs and connects to the stdin/stdout of a binary which serves a Guest.
+func Host(exe string, args ...string) *Plog {
 	debug("host %q %v", exe, args)
 
 	p := empty()

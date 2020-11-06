@@ -1,6 +1,6 @@
 //+build debug
 
-package plug
+package plog
 
 import (
 	"fmt"

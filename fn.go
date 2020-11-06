@@ -1,4 +1,4 @@
-package plug
+package plog
 
 import (
 	"encoding/json"
@@ -16,8 +16,8 @@ func fnOf(f interface{}) fn {
 	return fn{v, v.Type()}
 }
 
-// Register adds the given function to the Plug, to be called by the Plug on the other end. It returns the Plug to make chaining easy.
-func (p *Plug) Register(name string, f interface{}) *Plug {
+// Register adds the given function to the Plog, to be called by the Plog on the other end. It returns the Plog to make chaining easy.
+func (p *Plog) Register(name string, f interface{}) *Plog {
 	p.fnMu.Lock()
 	p.fns[name] = fnOf(f)
 	p.fnMu.Unlock()

@@ -1,10 +1,10 @@
-package plug
+package plog
 
 import (
 	"fmt"
 )
 
-func (p *Plug) call(m *msg) error {
+func (p *Plog) call(m *msg) error {
 	debug("call %v", m)
 
 	p.fnMu.Lock()

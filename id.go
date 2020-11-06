@@ -1,6 +1,6 @@
-package plug
+package plog
 
-func (p *Plug) newCall() int {
+func (p *Plog) newCall() int {
 	for id, ok := range p.calls {
 		if !ok {
 			return p.takeCall(id)
@@ -11,11 +11,11 @@ func (p *Plug) newCall() int {
 	return p.takeCall(id)
 }
 
-func (p *Plug) takeCall(id int) int {
+func (p *Plog) takeCall(id int) int {
 	p.calls[id] = true
 	return id
 }
 
-func (p *Plug) releaseCall(id int) {
+func (p *Plog) releaseCall(id int) {
 	p.calls[id] = false
 }

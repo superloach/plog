@@ -1,4 +1,4 @@
-package plug
+package plog
 
 import (
 	"encoding/json"
@@ -7,8 +7,8 @@ import (
 	"sync"
 )
 
-// Plug is a plugin connection. Use Host, Guest, or New to make one of these, where appropriate.
-type Plug struct {
+// Plog is a plugin connection. Use Host, Guest, or New to make one of these, where appropriate.
+type Plog struct {
 	dec   *json.Decoder
 	decMu sync.Mutex
 
@@ -30,8 +30,8 @@ type Plug struct {
 	ioReady chan bool
 }
 
-// New creates a new Plug connected to in and out. It is preferable to use Host or Guest instead.
-func New(in io.Reader, out io.Writer) *Plug {
+// New creates a new Plog connected to in and out. It is preferable to use Host or Guest instead.
+func New(in io.Reader, out io.Writer) *Plog {
 	p := empty()
 
 	p.dec = json.NewDecoder(in)
@@ -42,8 +42,8 @@ func New(in io.Reader, out io.Writer) *Plug {
 	return p
 }
 
-func empty() *Plug {
-	return &Plug{
+func empty() *Plog {
+	return &Plog{
 		fns:   make(map[string]fn),
 		rets:  make(map[int]*ret),
 		calls: make(map[int]bool),
@@ -55,7 +55,7 @@ func empty() *Plug {
 	}
 }
 
-// Guest makes a Plug which serves on the stdin/stdout of the binary, and can be run with a Host.
-func Guest() *Plug {
+// Guest makes a Plog which serves on the stdin/stdout of the binary, and can be run with a Host.
+func Guest() *Plog {
 	return New(os.Stdin, os.Stdout)
 }

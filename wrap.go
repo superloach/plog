@@ -1,4 +1,4 @@
-package plug
+package plog
 
 import (
 	"encoding/json"
@@ -6,8 +6,8 @@ import (
 	"reflect"
 )
 
-// Wrap wraps a call to a function on the connected Plug into a function value. Returns the Plug to make chaining easy.
-func (p *Plug) Wrap(name string, fr interface{}) *Plug {
+// Wrap wraps a call to a function on the connected Plog into a function value. Returns the Plog to make chaining easy.
+func (p *Plog) Wrap(name string, fr interface{}) *Plog {
 	debug("wrapping %q", name)
 
 	wrapCallJSON(func(data []byte) ([]byte, error) {

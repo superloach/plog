@@ -1,4 +1,4 @@
-package plug
+package plog
 
 type ret struct {
 	Name string
@@ -6,7 +6,7 @@ type ret struct {
 	C    chan *msg
 }
 
-func (p *Plug) addRet(name string, call int) (int, chan *msg) {
+func (p *Plog) addRet(name string, call int) (int, chan *msg) {
 	p.retMu.Lock()
 	defer p.retMu.Unlock()
 
@@ -26,12 +26,12 @@ func (p *Plug) addRet(name string, call int) (int, chan *msg) {
 	return id, p.putRet(id, r)
 }
 
-func (p *Plug) putRet(id int, r *ret) chan *msg {
+func (p *Plog) putRet(id int, r *ret) chan *msg {
 	p.rets[id] = r
 	return r.C
 }
 
-func (p *Plug) dropRet(id int) {
+func (p *Plog) dropRet(id int) {
 	p.rets[id] = nil
 }
 

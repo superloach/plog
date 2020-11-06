@@ -1,4 +1,4 @@
-package plug
+package plog
 
 import (
 	"errors"
@@ -7,15 +7,15 @@ import (
 )
 
 // MustServe simply calls Serve and panics if there's an error.
-func (p *Plug) MustServe() {
+func (p *Plog) MustServe() {
 	err := p.Serve()
 	if err != nil {
 		panic(err)
 	}
 }
 
-// Serve runs the Plug's event loop and returns if an error occurs.
-func (p *Plug) Serve() error {
+// Serve runs the Plog's event loop and returns if an error occurs.
+func (p *Plog) Serve() error {
 	err := p.openFn()
 	if err != nil {
 		return fmt.Errorf("openfn: %w", err)

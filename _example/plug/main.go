@@ -3,7 +3,7 @@ package main
 import (
 	"strings"
 
-	"github.com/superloach/plug"
+	"github.com/superloach/plog"
 )
 
 var getString func() (string, error)
@@ -18,7 +18,7 @@ func upper() string {
 }
 
 func main() {
-	plug.Guest().
+	plog.Guest().
 		Register("upper", upper).
 		Wrap("getString", &getString).
 		MustServe()

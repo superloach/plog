@@ -1,5 +1,5 @@
 //+build !debug
 
-package plug
+package plog
 
 func debug(f string, args ...interface{}) {}

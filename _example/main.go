@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/superloach/plug"
+	"github.com/superloach/plog"
 )
 
 const theString = "this is the string"
@@ -16,7 +16,7 @@ func getString() string {
 }
 
 func main() {
-	p := plug.Host(os.Args[1], os.Args[2:]...).
+	p := plog.Host(os.Args[1], os.Args[2:]...).
 		Register("getString", getString).
 		Wrap("upper", &upper)
 
