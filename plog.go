@@ -59,3 +59,11 @@ func empty() *Plog {
 func Guest() *Plog {
 	return New(os.Stdin, os.Stdout)
 }
+
+// Pair makes a pair of Plogs connected by io.Pipe. Useful for testing purposes.
+func Pair() (*Plog, *Plog) {
+	ain, bout := io.Pipe()
+	bin, aout := io.Pipe()
+
+	return New(ain, aout), New(bin, bout)
+}
