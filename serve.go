@@ -10,7 +10,7 @@ import (
 func (p *Plog) MustServe() {
 	err := p.Serve()
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("serve: %w", err))
 	}
 }
 
@@ -23,22 +23,9 @@ func (p *Plog) Serve() error {
 
 	defer p.closeFn()
 
-	errs := make(chan error)
-
 	for {
-		select {
-		case err := <-errs:
-			return err
-		default:
-		}
-
-		m := &msg{}
-
-		p.decMu.Lock()
-		err := p.dec.Decode(&m)
-		p.decMu.Unlock()
-
-		debug("decoded m %v", m)
+		msg, err := p.mes.Recv()
+		debug("recv msg %v", msg)
 
 		if errors.Is(err, io.EOF) {
 			return nil
@@ -48,7 +35,7 @@ func (p *Plog) Serve() error {
 			return fmt.Errorf("decode: %w", err)
 		}
 
-		if m.Return != nil {
+		if msg.Ret != nil {
 			debug("is a ret")
 
 			p.retMu.Lock()
@@ -59,20 +46,20 @@ func (p *Plog) Serve() error {
 
 				debug("spawn ret %d", id)
 
-				go r.Ret(m)
+				go r.Ret(msg)
 			}
 			p.retMu.Unlock()
 
 			continue
 		}
 
-		if m.Args != nil {
+		if msg.Args != nil {
 			debug("is a call")
 
 			go func() {
-				err := p.call(m)
+				err := p.localCall(msg)
 				if err != nil {
-					errs <- err
+					debug("call %v: ERROR %s", msg, err)
 				}
 			}()
 

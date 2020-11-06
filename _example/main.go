@@ -5,20 +5,27 @@ import (
 	"os"
 
 	"github.com/superloach/plog"
+	"github.com/superloach/plog/_example/common"
 )
 
 const theString = "this is the string"
 
-var upper func() (string, error)
+type Str string
 
-func getString() string {
+var (
+	upper func() (Str, error)
+	foo   func() (common.Struct, error)
+)
+
+func getString() Str {
 	return theString
 }
 
 func main() {
-	p := plog.Host(os.Args[1], os.Args[2:]...).
-		Register("getString", getString).
-		Wrap("upper", &upper)
+	p := plog.Exec(os.Args[1], os.Args[2:]...).
+		Expose("getString", getString).
+		Bind("upper", &upper).
+		Bind("foo", &foo)
 
 	go p.MustServe()
 
@@ -38,4 +45,11 @@ func main() {
 	}
 
 	fmt.Printf("(call) %q -> %q\n", theString, upperString)
+
+	s, err := foo()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("(foo) %v\n", s)
 }

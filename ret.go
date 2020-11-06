@@ -1,48 +1,51 @@
 package plog
 
 type ret struct {
+	ID   int
 	Name string
 	Call int
-	C    chan *msg
+	C    chan *Msg
 }
 
-func (p *Plog) addRet(name string, call int) (int, chan *msg) {
+func (p *Plog) addRet(name string, call int) *ret {
 	p.retMu.Lock()
 	defer p.retMu.Unlock()
 
 	r := &ret{
 		Name: name,
 		Call: call,
-		C:    make(chan *msg),
+		C:    make(chan *Msg),
 	}
 
 	for id, er := range p.rets {
 		if er == nil {
-			return id, p.putRet(id, r)
+			return p.putRet(id, r)
 		}
 	}
 
 	id := len(p.rets)
-	return id, p.putRet(id, r)
+	return p.putRet(id, r)
 }
 
-func (p *Plog) putRet(id int, r *ret) chan *msg {
+func (p *Plog) putRet(id int, r *ret) *ret {
+	r.ID = id
 	p.rets[id] = r
-	return r.C
+	return r
 }
 
-func (p *Plog) dropRet(id int) {
-	p.rets[id] = nil
+func (p *Plog) dropRet(r *ret) {
+	close(r.C)
+	p.rets[r.ID] = nil
 }
 
-func (r *ret) Ret(m *msg) {
-	if m.Name != r.Name {
+func (r *ret) Ret(msg *Msg) {
+	if msg.Name != r.Name {
 		return
 	}
 
-	if m.Call != r.Call {
+	if msg.Call != r.Call {
 		return
 	}
 
-	r.C <- m
+	r.C <- msg
 }

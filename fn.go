@@ -16,8 +16,13 @@ func fnOf(f interface{}) fn {
 	return fn{v, v.Type()}
 }
 
-// Register adds the given function to the Plog, to be called by the Plog on the other end. It returns the Plog to make chaining easy.
-func (p *Plog) Register(name string, f interface{}) *Plog {
+// Expose adds the given function to the Plog, to be called by the Plog on the other end. It returns the Plog to make chaining easy.
+//
+//  fn := func(n int) int {
+//  	return n * n
+//  }
+//  p.Expose("fn", fn)
+func (p *Plog) Expose(name string, f interface{}) *Plog {
 	p.fnMu.Lock()
 	p.fns[name] = fnOf(f)
 	p.fnMu.Unlock()

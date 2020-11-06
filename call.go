@@ -5,16 +5,24 @@ import (
 	"fmt"
 )
 
+// Call makes a function call to the connected Plug manually. Using Bind is preferable.
+//
+//  // note the reference in rets
+//  sqr2 := 0
+//  err := p.Call("fn",
+//  	[]interface{}{2},
+//  	[]interface{}{&sqr2},
+//  )
 func (p *Plog) Call(name string, args, rets []interface{}) error {
-	<-p.ioReady
+	<-p.mesReady
 
 	call := p.newCall()
 	defer p.releaseCall(call)
 
 	debug("enter call %s_%d", name, call)
 
-	rid, got := p.addRet(name, call)
-	defer p.dropRet(rid)
+	r := p.addRet(name, call)
+	defer p.dropRet(r)
 
 	debug("added hook")
 
@@ -23,68 +31,79 @@ func (p *Plog) Call(name string, args, rets []interface{}) error {
 		return fmt.Errorf("marshal %v: %w", args, err)
 	}
 
-	m := &msg{
+	msg := &Msg{
 		Name: name,
 		Call: call,
 		Args: data,
 	}
 
-	p.encMu.Lock()
-	err = p.enc.Encode(m)
-	p.encMu.Unlock()
-
-	debug("encoded %v", m)
-
+	err = p.mes.Send(msg)
 	if err != nil {
-		debug("enc error %s", err)
-		return fmt.Errorf("encode %v: %w", m, err)
+		return fmt.Errorf("send %v: %w", msg, err)
 	}
 
-	m = <-got
-	debug("got m %v", m)
+	debug("encoded %v", msg)
 
-	err = json.Unmarshal(m.Return, &rets)
+	msg = <-r.C
+	debug("call got msg %v", msg)
+
+	err = json.Unmarshal(msg.Ret, &rets)
 	if err != nil {
-		return fmt.Errorf("unmarshal %q: %w", m.Return, err)
+		return fmt.Errorf("unmarshal %q: %w", msg.Ret, err)
 	}
 
 	return nil
 }
 
-func (p *Plog) call(m *msg) error {
-	debug("call %v", m)
+func (p *Plog) newCall() int {
+	for id, ok := range p.calls {
+		if !ok {
+			return p.takeCall(id)
+		}
+	}
+
+	id := len(p.calls)
+	return p.takeCall(id)
+}
+
+func (p *Plog) takeCall(id int) int {
+	p.calls[id] = true
+	return id
+}
+
+func (p *Plog) releaseCall(id int) {
+	p.calls[id] = false
+}
+
+func (p *Plog) localCall(msg *Msg) error {
+	debug("call %v", msg)
 
 	p.fnMu.Lock()
-	fn, ok := p.fns[m.Name]
+	fn, ok := p.fns[msg.Name]
 	if !ok {
 		p.fnMu.Unlock()
-		return fmt.Errorf("no fn %q", m.Name)
+		return fmt.Errorf("no fn %q", msg.Name)
 	}
 	p.fnMu.Unlock()
 
-	debug("call %q %q", m.Name, m.Args)
+	debug("call %q %q", msg.Name, msg.Args)
 
-	retd, err := fn.callJSON(m.Args)
+	retd, err := fn.callJSON(msg.Args)
 	if err != nil {
-		return fmt.Errorf("call json %q: %w", m.Args, err)
+		return fmt.Errorf("call json %q: %w", msg.Args, err)
 	}
 
-	debug("%q returned %q", m.Name, retd)
+	debug("%q returned %q", msg.Name, retd)
 
-	ret := &msg{
-		Name:   m.Name,
-		Call:   m.Call,
-		Return: retd,
+	msg = &Msg{
+		Name: msg.Name,
+		Call: msg.Call,
+		Ret:  retd,
 	}
 
-	p.encMu.Lock()
-	err = p.enc.Encode(ret)
-	p.encMu.Unlock()
-
-	debug("encoded ret %v", ret)
-
+	err = p.mes.Send(msg)
 	if err != nil {
-		return fmt.Errorf("encode %v: %w", ret, err)
+		return fmt.Errorf("send %v: %w", msg, err)
 	}
 
 	return nil

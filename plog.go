@@ -7,13 +7,10 @@ import (
 	"sync"
 )
 
-// Plog is a plugin connection. Use Host, Guest, or New to make one of these, where appropriate.
+// Plog is a plugin connection. Use Client, Server, IO, or New to make one of these, where appropriate.
 type Plog struct {
-	dec   *json.Decoder
-	decMu sync.Mutex
-
-	enc   *json.Encoder
-	encMu sync.Mutex
+	mes      Messenger
+	mesReady chan bool
 
 	fns  map[string]fn
 	fnMu sync.Mutex
@@ -26,44 +23,43 @@ type Plog struct {
 
 	openFn  func() error
 	closeFn func()
-
-	ioReady chan bool
-}
-
-// New creates a new Plog connected to in and out. It is preferable to use Host or Guest instead.
-func New(in io.Reader, out io.Writer) *Plog {
-	p := empty()
-
-	p.dec = json.NewDecoder(in)
-	p.enc = json.NewEncoder(out)
-
-	close(p.ioReady)
-
-	return p
 }
 
 func empty() *Plog {
 	return &Plog{
-		fns:   make(map[string]fn),
-		rets:  make(map[int]*ret),
-		calls: make(map[int]bool),
+		mesReady: make(chan bool),
+		fns:      make(map[string]fn),
+		rets:     make(map[int]*ret),
+		calls:    make(map[int]bool),
 		openFn: func() error {
 			return nil
 		},
 		closeFn: func() {},
-		ioReady: make(chan bool),
 	}
 }
 
-// Guest makes a Plog which serves on the stdin/stdout of the binary, and can be run with a Host.
-func Guest() *Plog {
-	return New(os.Stdin, os.Stdout)
+// New creates a new Plog with the given Messenger.
+func New(mes Messenger) *Plog {
+	p := empty()
+
+	p.openFn = func() error {
+		p.mes = mes
+		close(p.mesReady)
+		return nil
+	}
+
+	return p
 }
 
-// Pair makes a pair of Plogs connected by io.Pipe. Useful for testing purposes.
-func Pair() (*Plog, *Plog) {
-	ain, bout := io.Pipe()
-	bin, aout := io.Pipe()
+// IO creates a new Plog connected to in and out, using an ioMessenger.
+func IO(in io.Reader, out io.Writer) *Plog {
+	return New(ioMessenger{
+		Decoder: json.NewDecoder(in),
+		Encoder: json.NewEncoder(out),
+	})
+}
 
-	return New(ain, aout), New(bin, bout)
+// StdIO makes a Plog which serves on the stdin/stdout of the binary, and can be run with an Exec.
+func StdIO() *Plog {
+	return IO(os.Stdin, os.Stdout)
 }

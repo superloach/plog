@@ -7,8 +7,8 @@ import (
 	"os/exec"
 )
 
-// Host makes a Plog which runs and connects to the stdin/stdout of a binary which serves a Guest.
-func Host(exe string, args ...string) *Plog {
+// Exec makes a Plog which runs and connects to a binary running an IO Plog.
+func Exec(exe string, args ...string) *Plog {
 	debug("host %q %v", exe, args)
 
 	p := empty()
@@ -39,16 +39,16 @@ func Host(exe string, args ...string) *Plog {
 
 		debug("started cmd %q", exe)
 
-		// swap out and in
-		p.dec = json.NewDecoder(cmdOut)
-		p.enc = json.NewEncoder(cmdIn)
-
 		p.closeFn = func() {
 			debug("killing %q", exe)
 			cmd.Process.Kill()
 		}
 
-		close(p.ioReady)
+		p.mes = ioMessenger{
+			Decoder: json.NewDecoder(cmdOut),
+			Encoder: json.NewEncoder(cmdIn),
+		}
+		close(p.mesReady)
 
 		return nil
 	}
