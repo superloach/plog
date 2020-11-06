@@ -66,10 +66,15 @@ func (p *Plug) Serve() error {
 			continue
 		}
 
-		if m.Call != nil {
+		if m.Args != nil {
 			debug("is a call")
 
-			go p.call(m, errs)
+			go func() {
+				err := p.call(m)
+				if err != nil {
+					errs <- err
+				}
+			}()
 
 			continue
 		}

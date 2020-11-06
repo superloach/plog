@@ -1,11 +1,10 @@
 package plug
 
-import (
-	"encoding/json"
-)
+import "encoding/json"
 
 type msg struct {
 	Name   string          `json:"name"`
-	Call   json.RawMessage `json:"call,omitempty"`
+	Call   int             `json:"call"`
+	Args   json.RawMessage `json:"args,omitempty"`
 	Return json.RawMessage `json:"return,omitempty"`
 }

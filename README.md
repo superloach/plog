@@ -1,9 +1,8 @@
-plug
-====
+# plog
+A Go plugin system based around simple function calls, using JSON over stdin/stdout.
 
-to use the example, run the following:
+## example
 ```
-cd _example
-go build -tags example -o ./plug.o ./plug
-go run -tags example .
+go run ./_example \
+	go run ./_example/plug
 ```

@@ -13,21 +13,20 @@ func (p *Plug) Wrap(name string, fr interface{}) *Plug {
 	wrapCallJSON(func(data []byte) ([]byte, error) {
 		<-p.ioReady
 
-		id := p.newCall()
-		defer p.releaseCall(id)
+		call := p.newCall()
+		defer p.releaseCall(call)
 
-		callName := fmt.Sprintf("%s_%d", name, id)
+		debug("enter wrapped call json %s_%d", name, call)
 
-		debug("enter wrapped call json %q", callName)
-
-		rid, got := p.addRet(callName)
+		rid, got := p.addRet(name, call)
 		defer p.dropRet(rid)
 
 		debug("added hook")
 
 		m := &msg{
-			Name: callName,
-			Call: data,
+			Name: name,
+			Call: call,
+			Args: data,
 		}
 
 		p.encMu.Lock()

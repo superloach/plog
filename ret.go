@@ -2,15 +2,17 @@ package plug
 
 type ret struct {
 	Name string
+	Call int
 	C    chan *msg
 }
 
-func (p *Plug) addRet(name string) (int, chan *msg) {
+func (p *Plug) addRet(name string, call int) (int, chan *msg) {
 	p.retMu.Lock()
 	defer p.retMu.Unlock()
 
 	r := &ret{
 		Name: name,
+		Call: call,
 		C:    make(chan *msg),
 	}
 
@@ -35,6 +37,10 @@ func (p *Plug) dropRet(id int) {
 
 func (r *ret) Ret(m *msg) {
 	if m.Name != r.Name {
+		return
+	}
+
+	if m.Call != r.Call {
 		return
 	}
 

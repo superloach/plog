@@ -2,41 +2,31 @@ package plug
 
 import (
 	"fmt"
-	"strings"
 )
 
-func (p *Plug) call(m *msg, errs chan error) {
-	idx := strings.LastIndexByte(m.Name, '_')
-	if idx < 0 {
-		errs <- fmt.Errorf("idx %d < 0", idx)
-		return
-	}
-
-	name := m.Name[:idx]
-
-	debug("name is %q", name)
+func (p *Plug) call(m *msg) error {
+	debug("call %v", m)
 
 	p.fnMu.Lock()
-	fn, ok := p.fns[name]
+	fn, ok := p.fns[m.Name]
 	if !ok {
 		p.fnMu.Unlock()
-		errs <- fmt.Errorf("no fn %q", name)
-		return
+		return fmt.Errorf("no fn %q", m.Name)
 	}
 	p.fnMu.Unlock()
 
-	debug("call %q %q", name, m.Call)
+	debug("call %q %q", m.Name, m.Args)
 
-	retd, err := fn.callJSON(m.Call)
+	retd, err := fn.callJSON(m.Args)
 	if err != nil {
-		errs <- fmt.Errorf("call json %q: %w", m.Call, err)
-		return
+		return fmt.Errorf("call json %q: %w", m.Args, err)
 	}
 
-	debug("%q returned %q", name, retd)
+	debug("%q returned %q", m.Name, retd)
 
 	ret := &msg{
 		Name:   m.Name,
+		Call:   m.Call,
 		Return: retd,
 	}
 
@@ -47,7 +37,8 @@ func (p *Plug) call(m *msg, errs chan error) {
 	debug("encoded ret %v", ret)
 
 	if err != nil {
-		errs <- fmt.Errorf("encode %v: %w", ret, err)
-		return
+		return fmt.Errorf("encode %v: %w", ret, err)
 	}
+
+	return nil
 }
