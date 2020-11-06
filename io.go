@@ -4,19 +4,27 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 )
+
+// StdIO returns an Opener which connects to stdin/stdout, to be connected to by Exec.
+func StdIO() Opener {
+	return IO(os.Stdin, os.Stdout)
+}
+
+// IO returns an Opener which connects to r and w with an ioMes.
+func IO(r io.Reader, w io.Writer) Opener {
+	return func() (Messenger, error) {
+		return ioMes{
+			Decoder: json.NewDecoder(r),
+			Encoder: json.NewEncoder(w),
+		}, nil
+	}
+}
 
 type ioMes struct {
 	*json.Decoder
 	*json.Encoder
-}
-
-// IOMessenger creates a Messenger connected to r and w with an ioMes.
-func IOMessenger(r io.Reader, w io.Writer) Messenger {
-	return ioMes{
-		Decoder: json.NewDecoder(r),
-		Encoder: json.NewEncoder(w),
-	}
 }
 
 func (i ioMes) Recv() (*Msg, error) {
@@ -39,18 +47,6 @@ func (i ioMes) Send(msg *Msg) error {
 	return nil
 }
 
-type chanMes chan *Msg
-
-// ChanMessenger creates a Messenger connected to c with a chanMes.
-func ChanMessenger(c chan *Msg) Messenger {
-	return chanMes(c)
-}
-
-func (c chanMes) Recv() (*Msg, error) {
-	return <-c, nil
-}
-
-func (c chanMes) Send(msg *Msg) error {
-	c <- msg
+func (i ioMes) Close() error {
 	return nil
 }

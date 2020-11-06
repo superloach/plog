@@ -14,8 +14,6 @@ import (
 //  	[]interface{}{&sqr2},
 //  )
 func (p *Plog) Call(name string, args, rets []interface{}) error {
-	<-p.mesReady
-
 	call := p.newCall()
 	defer p.releaseCall(call)
 
@@ -37,7 +35,7 @@ func (p *Plog) Call(name string, args, rets []interface{}) error {
 		Args: data,
 	}
 
-	err = p.mes.Send(msg)
+	err = p.Send(msg)
 	if err != nil {
 		return fmt.Errorf("send %v: %w", msg, err)
 	}
@@ -101,7 +99,7 @@ func (p *Plog) localCall(msg *Msg) error {
 		Ret:  retd,
 	}
 
-	err = p.mes.Send(msg)
+	err = p.Send(msg)
 	if err != nil {
 		return fmt.Errorf("send %v: %w", msg, err)
 	}

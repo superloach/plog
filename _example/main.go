@@ -22,12 +22,18 @@ func getString() Str {
 }
 
 func main() {
-	p := plog.Exec(os.Args[1], os.Args[2:]...).
+	p := plog.New(
+		plog.Exec(os.Args[1], os.Args[2:]...),
+	).
 		Expose("getString", getString).
 		Bind("upper", &upper).
 		Bind("foo", &foo)
 
 	go p.MustServe()
+
+	p.WaitReady()
+
+	fmt.Println("ready")
 
 	upperString, err := upper()
 	if err != nil {

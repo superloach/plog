@@ -1,14 +1,16 @@
 package plog
 
 import (
-	"os"
 	"sync"
 )
 
-// Plog is a plugin connection. Use Client, Server, IO, or New to make one of these, where appropriate.
+type Opener = func() (Messenger, error)
+
+// Plog is a plugin connection. Use StdIO, Exec, New, or Will to make one of these, where appropriate.
 type Plog struct {
-	mes      Messenger
-	mesReady chan bool
+	opener Opener
+	mes    Messenger
+	ready  chan bool
 
 	fns  map[string]fn
 	fnMu sync.Mutex
@@ -18,38 +20,19 @@ type Plog struct {
 
 	calls  map[int]bool
 	callMu sync.Mutex
-
-	openFn  func() error
-	closeFn func()
 }
 
-func empty() *Plog {
+func (p *Plog) WaitReady() {
+	<-p.ready
+}
+
+// New creates a new Plog with the given Opener.
+func New(o Opener) *Plog {
 	return &Plog{
-		mesReady: make(chan bool),
-		fns:      make(map[string]fn),
-		rets:     make(map[int]*ret),
-		calls:    make(map[int]bool),
-		openFn: func() error {
-			return nil
-		},
-		closeFn: func() {},
+		opener: o,
+		ready:  make(chan bool),
+		fns:    make(map[string]fn),
+		rets:   make(map[int]*ret),
+		calls:  make(map[int]bool),
 	}
-}
-
-// New creates a new Plog with the given Messenger.
-func New(mes Messenger) *Plog {
-	p := empty()
-
-	p.openFn = func() error {
-		p.mes = mes
-		close(p.mesReady)
-		return nil
-	}
-
-	return p
-}
-
-// StdIO makes a Plog which serves on the stdin/stdout of the binary, and can be connected to by Exec.
-func StdIO() *Plog {
-	return New(IOMessenger(os.Stdin, os.Stdout))
 }

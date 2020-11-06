@@ -16,15 +16,18 @@ func (p *Plog) MustServe() {
 
 // Serve runs the Plog's event loop and returns if an error occurs.
 func (p *Plog) Serve() error {
-	err := p.openFn()
+	mes, err := p.opener()
 	if err != nil {
 		return fmt.Errorf("openfn: %w", err)
 	}
 
-	defer p.closeFn()
+	p.mes = mes
+	close(p.ready)
+
+	defer p.Close()
 
 	for {
-		msg, err := p.mes.Recv()
+		msg, err := p.Recv()
 		debug("recv msg %v", msg)
 
 		if errors.Is(err, io.EOF) {

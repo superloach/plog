@@ -16,8 +16,6 @@ func (p *Plog) Bind(name string, fr interface{}) *Plog {
 	debug("wrapping %q", name)
 
 	wrapCallJSON(func(data []byte) ([]byte, error) {
-		<-p.mesReady
-
 		call := p.newCall()
 		defer p.releaseCall(call)
 
@@ -34,7 +32,7 @@ func (p *Plog) Bind(name string, fr interface{}) *Plog {
 			Args: data,
 		}
 
-		err := p.mes.Send(msg)
+		err := p.Send(msg)
 		if err != nil {
 			debug("enc error %s", err)
 			return nil, fmt.Errorf("encode %v: %w", msg, err)

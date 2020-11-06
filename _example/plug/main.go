@@ -33,7 +33,7 @@ func upper() string {
 }
 
 func main() {
-	plog.StdIO().
+	plog.New(plog.StdIO()).
 		Expose("upper", upper).
 		Expose("foo", foo).
 		Bind("getString", &getString).

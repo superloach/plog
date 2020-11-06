@@ -16,4 +16,20 @@ type Msg struct {
 type Messenger interface {
 	Send(*Msg) error
 	Recv() (*Msg, error)
+	Close() error
+}
+
+func (p *Plog) Send(msg *Msg) error {
+	p.WaitReady()
+	return p.mes.Send(msg)
+}
+
+func (p *Plog) Recv() (*Msg, error) {
+	p.WaitReady()
+	return p.mes.Recv()
+}
+
+func (p *Plog) Close() error {
+	p.WaitReady()
+	return p.mes.Close()
 }
